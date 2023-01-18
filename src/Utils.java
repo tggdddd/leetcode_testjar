@@ -1,12 +1,14 @@
+import Generator.Generator;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.LinkedList;
-import Generator.*;
+import java.util.List;
 /**
  * @ClassName Utils
  * @Description
@@ -22,6 +24,7 @@ public class Utils {
     /* 方法调用后的返回值 */
     public Object result;
     public Class resultType;
+
     /**
      * @param clasz Solution类的位置
      * @return 返回一个包含输入参数的列表
@@ -29,32 +32,92 @@ public class Utils {
      */
     void dispose(Class clasz, LinkedList list) throws Exception {
         Method[] methods = clasz.getDeclaredMethods();
-        if (methods.length != 1) {
-            throw new Exception("无法识别到调用的方法，请不要将Solution内的其他方法的访问范围设定为public");
+        Object doClass = null;
+        // 使用Solution类
+        if (clasz.getSimpleName().equals("Solution")) {
+            if (methods.length != 1) {
+                throw new Exception("无法识别到调用的方法，请不要将Solution内的其他方法的访问范围设定为public");
+            }
+            Method method = methods[0];
+            if (method.getParameterCount() != list.size()) {
+                throw new Exception("方法参数的数量与文件的行数不符");
+            }
+            Class<?>[] parameterTypes = method.getParameterTypes();
+            LinkedList params = new LinkedList();
+            for (int i = 0; i < list.size(); i++) {
+                Class parameterType = parameterTypes[i];
+                Object param = getParam(parameterType, list.get(i));
+                params.add(param);
+            }
+            doClass = clasz.newInstance();
+            Runtime r = Runtime.getRuntime();
+            r.gc();// 计算内存前先垃圾回收一次
+            long start = System.currentTimeMillis();// 开始Time
+            long startMem = r.freeMemory(); // 开始Memory
+            result = method.invoke(doClass, params.toArray());
+            long endMem = r.freeMemory(); // 末尾Memory
+            long end = System.currentTimeMillis();// 末尾Time
+            // 输出
+            System.out.println("用时消耗: " + (end - start) + "ms");
+            System.out.println("内存消耗: " + (startMem - endMem) / 1024 + "KB");
+            resultType = method.getReturnType();
         }
-        Method method = methods[0];
-        if (method.getParameterCount() != list.size()) {
-            throw new Exception("方法参数的数量与文件的行数不符");
+        // 使用其他的类
+        else {
+            System.out.printf("%-25s结果\n", "方法");
+            System.out.println("----------------------------------------");
+            // 获得方法调用次数
+            int disposeLength = ((List) list.get(0)).size();
+            // 调用方法
+            for (int i = 0; i < disposeLength; i++) {
+                // 获得方法名
+                Class parameterType = String.class;
+                Object methodName = getParam(parameterType, ((List) list.get(0)).get(i));
+                Method method = null;
+                for (Method method1 : methods) {
+                    if (method1.getName().equals(methodName)) {
+                        method = method1;
+                        break;
+                    }
+                }
+                // 构造函数
+                if (method == null) {
+                    if (((List) list.get(1)).get(i) == null) {
+                        doClass = clasz.newInstance();
+                    } else {
+                        // 获得构造参数
+                        Constructor constructor = clasz.getDeclaredConstructors()[0];
+                        Class<?>[] parameterTypes = constructor.getParameterTypes();
+                        LinkedList params = new LinkedList();
+                        for (int j = 0; j < parameterTypes.length; j++) {
+                            parameterType = parameterTypes[j];
+                            Object param = getParam(parameterType, ((List) ((List) list.get(1)).get(i)).get(j));
+                            params.add(param);
+                        }
+                        doClass = constructor.newInstance(params.toArray());
+                    }
+                } else {
+                    // 获得方法参数
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    LinkedList params = new LinkedList();
+                    for (int j = 0; j < parameterTypes.length; j++) {
+                        parameterType = parameterTypes[j];
+                        Object param = getParam(parameterType, ((List) ((List) list.get(1)).get(i)).get(j));
+                        params.add(param);
+                    }
+                    if (method.getParameterCount() != params.size()) {
+                        throw new Exception("方法参数的数量与文件的参数数量不符");
+                    }
+                    result = method.invoke(doClass, params.toArray());
+                    resultType = method.getReturnType();
+                    System.out.printf("%-25s  ", methodName + ":");
+                    print();
+                    System.out.println();
+                }
+            }
         }
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        LinkedList params = new LinkedList();
-        for (int i = 0; i < list.size(); i++) {
-            Class parameterType = parameterTypes[i];
-            Object param = getParam(parameterType, list.get(i));
-            params.add(param);
-        }
-        Runtime r = Runtime. getRuntime();
-        r.gc();//计算内存前先垃圾回收一次
-        long start = System.currentTimeMillis();//开始Time
-        long startMem = r.freeMemory(); // 开始Memory
-        result = method.invoke(clasz.newInstance(), params.toArray());
-        long endMem =r.freeMemory(); // 末尾Memory
-        long end = System.currentTimeMillis();//末尾Time
-        //输出
-        System.out.println("用时消耗: "+ (end - start) +"ms");
-        System.out.println("内存消耗: "+ (startMem - endMem) / 1024 +"KB");
-        resultType = method.getReturnType();
     }
+
     public void print() throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         print(resultType,result);
     }

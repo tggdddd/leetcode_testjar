@@ -9,6 +9,7 @@
 1. 在Solution中编写代码
 2. 在input.txt文件中粘贴测试用例
 3. 运行Main
+4. 如果为非Solution类题型则需在Main类中修改为所用类名
 
 ## 注意事项
 

@@ -1,5 +1,3 @@
-import Generator.Example;
-
 import java.util.LinkedList;
 
 /**
@@ -15,18 +13,30 @@ public class Main {
         //读取input文件
         // utils.readFile("input.txt");
         LinkedList list = utils.readFile();
-        //处理list数据并执行Solution
-        utils.dispose(Solution.class,list);
-        //对Solution执行结果进行输出  utils.result
-        System.out.println("运行结果如下：");
+        // 处理list数据并执行Solution
+        // utils.dispose(MKAverage.class,list);
+        utils.dispose(Solution.class, list);
+        // 对Solution执行结果进行输出  utils.result
+        System.out.println("最终运行结果为：");
         utils.print();
-
-
     }
 }
 
 class Solution {
-    public int countNicePairs(Example nums) {
+    public int get() {
+        return 1;
+    }
+}
+
+class MKAverage {
+    public MKAverage(int m, int k) {
+    }
+
+    public void addElement(int num) {
+
+    }
+
+    public int calculateMKAverage() {
         return 1;
     }
 }
