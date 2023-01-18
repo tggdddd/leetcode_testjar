@@ -9,7 +9,7 @@ public abstract class Generator {
         this.value = value;
     }
     public void print(){
-        System.out.println(value);
+        System.out.print(value+" ");
     }
     public void print(Object value){
         this.value = value;

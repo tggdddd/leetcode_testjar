@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.LinkedList;
 import Generator.*;
 /**
@@ -54,10 +55,22 @@ public class Utils {
         System.out.println("内存消耗: "+ (startMem - endMem) / 1024 +"KB");
         resultType = method.getReturnType();
     }
-    public void print() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        Generator generator = (Generator) Class.forName("Generator._"+resultType.getSimpleName()).newInstance();
-        generator.print(result);
+    public void print() throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        print(resultType,result);
     }
+
+    public void print(Class type,Object object) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, ClassNotFoundException, InstantiationException {
+        if (type.isArray()) {
+            for (int j = 0; j < Array.getLength(object); j++) {
+                print(type.getComponentType(), Array.get(object,j));
+            }
+            System.out.println();
+        } else {
+            Generator generator = (Generator) Class.forName("Generator._"+type.getSimpleName()).newInstance();
+            generator.print(object);
+        }
+    }
+
     public Object getParam(Class parameterType, Object list) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, ClassNotFoundException, InstantiationException {
         if (parameterType.isArray()) {
             LinkedList p = (LinkedList) list;
