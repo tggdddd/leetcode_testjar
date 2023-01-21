@@ -7,6 +7,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 /**
@@ -35,6 +37,7 @@ public class Utils {
         Object doClass = null;
         // 使用Solution类
         if (clasz.getSimpleName().equals("Solution")) {
+            methods = Arrays.stream(methods).filter(method -> method.getModifiers() == Modifier.PUBLIC).toArray(Method[]::new);
             if (methods.length != 1) {
                 throw new Exception("无法识别到调用的方法，请不要将Solution内的其他方法的访问范围设定为public");
             }
